@@ -1,0 +1,136 @@
+-- QUIZ FUNNEL
+-- Getting a glimpse of the survey data
+select *
+from survey
+limit 10;
+
+
+-- Counting number of users who responded to each question
+select question, count(distinct user_id)as responses
+from survey
+group by 1
+order by 1;
+
+
+-- Calculating percentage of users who answer each question
+select
+ question,
+ count(distinct user_id) as responses,
+ 100 * count(distinct user_id)/500 as 'Percent of Total Responses'
+from survey
+group by 1
+order by 1;
+
+
+-- HOME TRY-ON FUNNEL
+-- Checking out data tables
+select *
+from quiz
+limit 5;
+
+
+select *
+from home_try_on
+limit 5;
+
+
+select *
+from purchase
+limit 5;
+
+
+-- Creating master table with all funnel data
+select
+ q.user_id,
+ h.user_id is not null as 'Home Try-On?',
+ h.number_of_pairs as 'Number of Pairs',
+ p.user_id is not null as 'Purchased?'
+from quiz q
+left join home_try_on h
+ on q.user_id = h.user_id
+left join purchase p
+ on p.user_id = q.user_id
+limit 10;
+
+
+-- Calculating conversion rates for each stage of the funnel
+with funnels as (
+ select
+ q.user_id,
+ h.user_id is not null as home_try_on,
+ h.number_of_pairs,
+ p.user_id is not null as purchased
+from quiz q
+left join home_try_on h
+ on q.user_id = h.user_id
+left join purchase p
+ on p.user_id = q.user_id)
+select
+ count(*) as quiz_respondents,
+ sum(home_try_on) as total_try_ons,
+ sum(purchased) as total_purchasers,
+ 1.0 * sum(home_try_on)/count(*) as quiz_to_try_on_conv,
+ 1.0 * sum(purchased)/sum(home_try_on) as try_on_to_purchase_conv
+from funnels;
+
+
+-- Comparing purchases between customers who tried on 3 vs 5 pairs during HTO
+select
+ count(distinct case when number_of_pairs = '3 pairs' then user_id end) as 'num_3_pairs',
+ count(distinct case when number_of_pairs = '5 pairs' then user_id end) as 'num_5_pairs'
+from home_try_on
+where user_id in (
+ select user_id
+ from purchase);
+
+
+
+
+-- Comparing colors and styles across quiz respondents
+select
+ style,
+ color,
+ count(distinct user_id) as total_responses
+from quiz
+group by 1, 2
+order by 3 desc;
+
+
+-- Comparing colors and styles across purchases
+select
+ style,
+ color,
+ count(*) as total_purchases
+from purchase
+group by 1, 2
+order by 1 desc, 3 desc;
+
+
+-- Comparing total spend across styles and model name
+select
+   style,
+   model_name,
+   sum(price) as total_spend,
+   sum(price) * 100.0/sum(sum(price)) over () as percent_of_all_sales
+from purchase
+group by 1, 2
+order by 3 desc;
+
+
+-- Comparing total spend across styles and color
+select
+   style,
+   color,
+   sum(price) as total_spend,
+   sum(price) * 100.0/sum(sum(price)) over () as percent_of_all_sales
+from purchase
+group by 1, 2
+order by 3 desc;
+
+
+select
+ style,
+ count(distinct user_id) as total_responses
+from quiz
+group by 1
+order by 2 desc;
