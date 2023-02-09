@@ -1,3 +1,9 @@
+-- WARBY PARKER USAGE FUNNEL
+-- tables incl: survey (asking potential customers what they're looking for while shopping),
+                quiz (home try-on quiz and responses),
+                home_try_on (which styles were requested and number of pairs received),
+                purchase (purchase data including style, color, quanitity for each customer)
+
 -- QUIZ FUNNEL
 -- Getting a glimpse of the survey data
 select *
